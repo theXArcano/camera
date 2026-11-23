@@ -74,6 +74,7 @@ label.tg{font-size:13px;color:var(--dim);display:flex;align-items:center;gap:6px
 
   <div class="bar">
     <div class="chips" id="chips"></div>
+    <div class="chips" id="zp" hidden></div>
     <div class="row">
       <button class="thumb" id="thumb" aria-label="Última foto"></button>
       <button class="shot" id="shot" disabled aria-label="Tirar foto"><span></span></button>
@@ -194,12 +195,23 @@ function setupZoom(tr){
   if (c.zoom && c.zoom.max > c.zoom.min) {
     z.min = c.zoom.min; z.max = Math.min(c.zoom.max, 10); z.step = 0.1;
     z.value = tr.getSettings().zoom || c.zoom.min; z.hidden = false;
-  } else z.hidden = true;
+    const ultra = /ultra/i.test(tr.label);
+    const opts = (ultra ? [['0,5x',1],['1x',2],['2x',4]] : [['1x',1],['2x',2],['3x',3]])
+      .filter(([,val]) => val >= c.zoom.min && val <= c.zoom.max);
+    $('zp').innerHTML = opts.map(([lab,val]) =>
+      `<button class="chip${Math.abs(z.value - val) < 0.05 ? ' on' : ''}" data-z="${val}">${lab}<small>zoom digital</small></button>`).join('');
+    $('zp').hidden = opts.length < 2;
+  } else { z.hidden = true; $('zp').hidden = true; }
 }
-$('zoom').addEventListener('input', e => {
+function setZoom(val){
   const tr = stream && stream.getVideoTracks()[0];
-  if (tr) tr.applyConstraints({advanced:[{zoom:+e.target.value}]}).catch(err => note('zoom: ' + err.message));
-});
+  if (!tr) return;
+  tr.applyConstraints({advanced:[{zoom:val}]}).catch(err => note('zoom: ' + err.message));
+  $('zoom').value = val;
+  $('zp').querySelectorAll('.chip').forEach(b => b.classList.toggle('on', Math.abs(+b.dataset.z - val) < 0.05));
+}
+$('zoom').addEventListener('input', e => setZoom(+e.target.value));
+$('zp').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) setZoom(+b.dataset.z); });
 
 function scheduleRetry(){
   $('shot').disabled = true;
