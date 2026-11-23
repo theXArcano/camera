@@ -1,0 +1,23 @@
+name: Relato de modelo testado
+description: Conte se o Lentes funcionou no seu iPhone com câmera com defeito
+labels: [compatibilidade]
+body:
+  - type: input
+    id: modelo
+    attributes:
+      label: Modelo do iPhone e versão do iOS
+      placeholder: iPhone 13, iOS 26.1
+    validations:
+      required: true
+  - type: textarea
+    id: lentes
+    attributes:
+      label: Quais lentes aparecem e quais funcionam?
+      placeholder: Aparece 0,5x e Selfie; o 1x sumiu. A 0,5x funciona.
+    validations:
+      required: true
+  - type: textarea
+    id: defeito
+    attributes:
+      label: Qual era o defeito da câmera?
+      placeholder: Tela preta no app Câmera depois que o celular esquentou.

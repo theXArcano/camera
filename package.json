@@ -1,0 +1,33 @@
+{
+  "name": "lentes",
+  "version": "1.2.0",
+  "private": true,
+  "description": "Câmera web para iPhone com câmera com defeito: abre cada lente separadamente, religa após superaquecimento, foto, vídeo e modo offline.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Gabriel Mendes Mouta",
+  "homepage": "https://thexarcano.github.io/camera/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/theXArcano/camera.git"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "npx --yes http-server -p 8080 -c-1 .",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "node --test tests/unit/*.test.js",
+    "test:e2e": "playwright test",
+    "check": "npm run lint && npm run format:check && npm test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.49.0",
+    "eslint": "^10.15.0",
+    "globals": "^17.14.0",
+    "prettier": "^3.4.2"
+  }
+}

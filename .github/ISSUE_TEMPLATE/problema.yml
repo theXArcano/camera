@@ -1,0 +1,41 @@
+name: Problema no app
+description: Algo não funcionou no seu iPhone
+labels: [bug]
+body:
+  - type: input
+    id: modelo
+    attributes:
+      label: Modelo do iPhone
+      placeholder: iPhone 14 Plus
+    validations:
+      required: true
+  - type: input
+    id: ios
+    attributes:
+      label: Versão do iOS
+      description: Ajustes → Geral → Sobre
+      placeholder: iOS 26.1
+    validations:
+      required: true
+  - type: dropdown
+    id: onde
+    attributes:
+      label: Como você abriu o app?
+      options:
+        - Pelo ícone na Tela de Início
+        - Pelo Safari
+    validations:
+      required: true
+  - type: textarea
+    id: oque
+    attributes:
+      label: O que aconteceu?
+      description: O que você fez, o que esperava e o que apareceu.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostico
+    attributes:
+      label: Texto do Diagnóstico
+      description: No app, toque em Diagnóstico → Copiar e cole aqui.
+      render: text
