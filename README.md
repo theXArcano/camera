@@ -42,6 +42,7 @@ Apps que abrem **uma lente por vez**, com resolução e taxa de quadros mais bai
 | Detecta tela preta | Avisa quando a lente está sem imagem e reabre a câmera depois de 12 segundos |
 | Foto | Na resolução máxima que a lente entregar (ex.: 4032×3024 na ultra-angular) |
 | Vídeo | Grava em MP4 com som. Se a câmera cair no meio, o trecho já gravado é salvo |
+| Salva sozinho | Toda foto e vídeo fica guardado na galeria do app na hora, mesmo offline. Depois você manda tudo de uma vez para o app Fotos |
 | Zoom digital | Atalhos 0,5x, 1x e 2x quando só a ultra-angular funciona |
 | Qualidade | Máxima, Média (1080p) ou Leve (720p). A Leve esquenta menos |
 | Funciona offline | Depois de adicionado à Tela de Início, abre sem internet |

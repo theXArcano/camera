@@ -28,11 +28,13 @@ header{display:flex;align-items:center;justify-content:space-between;padding:10p
 .view{position:relative;overflow:hidden;background:#000}
 video#v{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:14px;background:#000c}
-.msg[hidden],[hidden]{display:none!important}
+[hidden]{display:none!important}
 .msg p{color:var(--dim);max-width:30ch;font-size:15px}
 .msg b{font-size:19px;font-weight:600}
 .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
 .res{position:absolute;left:12px;bottom:10px;font-size:12px;color:#fff;background:#0008;padding:3px 8px;border-radius:6px}
+.toast{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);background:#000c;color:#fff;font-size:13px;padding:6px 12px;border-radius:14px;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
 .timer{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--rec);color:#fff;font:600 15px/1 ui-monospace,Menlo,monospace;padding:6px 12px;border-radius:8px}
 .zoomw{position:absolute;right:10px;top:50%;transform:translateY(-50%) rotate(-90deg);transform-origin:center;width:150px}
 .bar{padding:10px 12px 14px;display:grid;gap:10px;background:var(--bg)}
@@ -52,16 +54,26 @@ video#v{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .shot:disabled{opacity:.35}
 .shot.video span{background:var(--rec)}
 .shot.recording span{width:30px;height:30px;border-radius:7px;background:var(--rec)}
-.thumb{width:52px;height:52px;border-radius:10px;border:1px solid var(--line);background:#16161a center/cover;justify-self:start;padding:0;overflow:hidden}
-.thumb video{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.thumb{position:relative;width:52px;height:52px;border-radius:10px;border:1px solid var(--line);background:#16161a center/cover;justify-self:start;padding:0;overflow:visible;color:var(--dim)}
+.thumb video{width:100%;height:100%;object-fit:cover;pointer-events:none;border-radius:9px}
+.badge{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:10px;background:var(--acc);color:#111;font:600 12px/20px -apple-system,system-ui,sans-serif;padding:0 5px;text-align:center}
 .sel{justify-self:end;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 select,.btn{font:inherit;font-size:14px;color:var(--ink);background:#16161a;border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:40px}
 .btn.big{background:var(--acc);color:#111;border:0;font-weight:600;padding:12px 22px;min-height:48px;font-size:16px}
+.btn.danger{color:var(--bad)}
 label.tg{font-size:13px;color:var(--dim);display:flex;align-items:center;gap:6px}
-.sheet{position:fixed;inset:0;background:#000e;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top) + 12px) 14px calc(env(safe-area-inset-bottom) + 12px);gap:12px;z-index:5}
-.sheet img,.sheet video{flex:1;min-height:0;width:100%;object-fit:contain;border-radius:8px;background:#000}
+.sheet{position:fixed;inset:0;background:#000f;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top) + 12px) 14px calc(env(safe-area-inset-bottom) + 12px);gap:12px;z-index:5}
+.sheet>img,.sheet>video{flex:1;min-height:0;width:100%;object-fit:contain;border-radius:8px;background:#000}
 .sheet .acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .sheet p{font-size:13px;color:var(--dim);text-align:center}
+.sheet h2{font-size:18px;font-weight:600}
+.ghead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.grid{flex:1;min-height:0;overflow-y:auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;align-content:start}
+.cell{position:relative;aspect-ratio:1;background:#16161a center/cover;border:0;padding:0;border-radius:4px;overflow:hidden}
+.cell video{width:100%;height:100%;object-fit:cover;pointer-events:none}
+.cell .tag{position:absolute;left:4px;bottom:4px;font-size:11px;background:#000a;color:#fff;padding:1px 5px;border-radius:4px}
+.cell .ok{position:absolute;right:4px;top:4px;width:18px;height:18px;border-radius:50%;background:var(--ok);color:#062;font-size:12px;line-height:18px;text-align:center;font-weight:700}
+.empty{color:var(--dim);text-align:center;padding:40px 20px;grid-column:1/-1}
 .diag{font:12px/1.5 ui-monospace,Menlo,monospace;color:var(--dim);white-space:pre-wrap;overflow:auto;flex:1;background:#111;border-radius:8px;padding:10px}
 </style>
 </head>
@@ -76,6 +88,7 @@ label.tg{font-size:13px;color:var(--dim);display:flex;align-items:center;gap:6px
     <video id="v" playsinline muted autoplay></video>
     <div class="res" id="res" hidden></div>
     <div class="timer" id="timer" hidden>00:00</div>
+    <div class="toast" id="toast"></div>
     <input type="range" class="zoomw" id="zoom" min="1" max="1" step="0.1" value="1" hidden aria-label="Zoom">
     <div class="flash" id="flash"></div>
     <div class="msg" id="msg">
@@ -93,7 +106,7 @@ label.tg{font-size:13px;color:var(--dim);display:flex;align-items:center;gap:6px
       <button id="mVideo">VÍDEO</button>
     </div>
     <div class="row">
-      <button class="thumb" id="thumb" aria-label="Última captura"></button>
+      <button class="thumb" id="thumb" aria-label="Galeria"><span class="badge" id="badge" hidden>0</span></button>
       <button class="shot" id="shot" disabled aria-label="Tirar foto"><span></span></button>
       <div class="sel">
         <select id="q" aria-label="Qualidade">
@@ -107,13 +120,27 @@ label.tg{font-size:13px;color:var(--dim);display:flex;align-items:center;gap:6px
   </div>
 </div>
 
-<div class="sheet" id="sheet" hidden>
-  <img id="big" alt="Foto tirada" hidden>
-  <video id="bigv" controls playsinline hidden></video>
-  <p id="sheetTip">Toque em Salvar e escolha "Salvar Imagem" para mandar pro app Fotos.</p>
+<div class="sheet" id="gallery" hidden>
+  <div class="ghead">
+    <h2 id="gTitle">Galeria</h2>
+    <button class="btn" id="gClose">Fechar</button>
+  </div>
+  <div class="grid" id="grid"></div>
+  <label class="tg" style="justify-content:center"><input type="checkbox" id="askSave"> Abrir "Salvar no Fotos" logo após cada captura</label>
   <div class="acts">
-    <button class="btn big" id="saveBtn">Salvar</button>
-    <button class="btn" id="closeBtn">Voltar</button>
+    <button class="btn big" id="saveAll">Salvar pendentes no Fotos</button>
+    <button class="btn danger" id="clearSaved">Apagar as já salvas</button>
+  </div>
+  <p>Tudo que você captura fica guardado aqui automaticamente, mesmo sem internet. O ✓ verde marca o que já foi para o app Fotos.</p>
+</div>
+
+<div class="sheet" id="viewer" hidden>
+  <img id="big" alt="Foto" hidden>
+  <video id="bigv" controls playsinline hidden></video>
+  <div class="acts">
+    <button class="btn big" id="vSave">Salvar no Fotos</button>
+    <button class="btn danger" id="vDel">Apagar</button>
+    <button class="btn" id="vClose">Voltar</button>
   </div>
 </div>
 
@@ -134,8 +161,9 @@ const QUAL = {
   hd:  {width:{ideal:1920}, height:{ideal:1080}},
   low: {width:{ideal:1280}, height:{ideal:720}}
 };
-let stream = null, devices = [], cur = null, retry = 0, retryTimer = null, blackSince = 0, wantRunning = false;
-let mode = 'foto', rec = null, recChunks = [], recStart = 0, recTick = null, mic = null, last = null;
+let stream = null, devices = [], cur = null, retry = 0, retryTimer = null, blackSince = 0, wantRunning = false, opening = false;
+let mode = 'foto', rec = null, recChunks = [], recStart = 0, recTick = null, mic = null;
+let items = [], urls = new Map(), viewing = null;
 const probe = document.createElement('canvas'); probe.width = 32; probe.height = 24;
 const pctx = probe.getContext('2d', {willReadFrequently:true});
 
@@ -146,6 +174,8 @@ const store = {
 const t = () => new Date().toLocaleTimeString('pt-BR');
 function note(s){ log.push(t()+'  '+s); if (log.length > 200) log.shift(); }
 function status(text, kind){ $('status').textContent = text; $('dot').className = 'dot ' + (kind||''); }
+let toastTimer = null;
+function toast(s){ const e = $('toast'); e.textContent = s; e.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => e.classList.remove('show'), 1800); }
 function showMsg(title, body, btn){
   const m = $('msg'); m.hidden = false;
   m.querySelector('b').textContent = title;
@@ -156,7 +186,127 @@ function showMsg(title, body, btn){
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').then(() => note('Modo offline pronto')).catch(e => note('Offline indisponível: ' + e.message));
 }
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().then(p => note('Armazenamento persistente: ' + (p ? 'sim' : 'não')));
 
+/* ---------- galeria interna (IndexedDB) ---------- */
+const DB = {
+  db: null,
+  open(){
+    return new Promise((ok, fail) => {
+      const r = indexedDB.open('lentes', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('midia', {keyPath:'id'});
+      r.onsuccess = () => { this.db = r.result; ok(); };
+      r.onerror = () => fail(r.error);
+    });
+  },
+  tx(modeTx){ return this.db.transaction('midia', modeTx).objectStore('midia'); },
+  all(){ return new Promise((ok, fail) => { const r = this.tx('readonly').getAll(); r.onsuccess = () => ok(r.result); r.onerror = () => fail(r.error); }); },
+  put(it){ return new Promise((ok, fail) => { const r = this.tx('readwrite').put(it); r.onsuccess = () => ok(); r.onerror = () => fail(r.error); }); },
+  del(id){ return new Promise((ok, fail) => { const r = this.tx('readwrite').delete(id); r.onsuccess = () => ok(); r.onerror = () => fail(r.error); }); }
+};
+let dbReady = DB.open().then(async () => {
+  items = (await DB.all()).sort((a,b) => b.id - a.id);
+  refreshThumb();
+}).catch(e => { note('Galeria indisponível: ' + e.message); });
+
+function urlOf(it){ if (!urls.has(it.id)) urls.set(it.id, URL.createObjectURL(it.blob)); return urls.get(it.id); }
+function dropUrl(id){ if (urls.has(id)) { URL.revokeObjectURL(urls.get(id)); urls.delete(id); } }
+function fileOf(it){
+  const ext = it.kind === 'foto' ? 'jpg' : (/webm/.test(it.blob.type) ? 'webm' : 'mp4');
+  const name = (it.kind === 'foto' ? 'foto-' : 'video-') + new Date(it.id).toISOString().replace(/[:.]/g,'-') + '.' + ext;
+  return new File([it.blob], name, {type: it.blob.type || (it.kind === 'foto' ? 'image/jpeg' : 'video/mp4')});
+}
+
+async function keep(blob, kind){
+  const it = {id: Date.now(), kind, blob, saved: false};
+  items.unshift(it);
+  refreshThumb();
+  try { await dbReady; await DB.put(it); toast(kind === 'foto' ? 'Foto guardada' : 'Vídeo guardado'); }
+  catch(e) { note('Não consegui guardar: ' + e.message); toast('Não consegui guardar, salve agora'); openViewer(it); return; }
+  if ($('askSave').checked) shareItems([it]);
+}
+
+function refreshThumb(){
+  const th = $('thumb'), first = items[0];
+  th.querySelectorAll('video').forEach(e => e.remove());
+  th.style.backgroundImage = '';
+  if (first) {
+    if (first.kind === 'foto') th.style.backgroundImage = `url(${urlOf(first)})`;
+    else th.insertAdjacentHTML('afterbegin', `<video src="${urlOf(first)}#t=0.1" muted playsinline preload="metadata"></video>`);
+  }
+  const pend = items.filter(i => !i.saved).length;
+  $('badge').textContent = pend; $('badge').hidden = !pend;
+}
+
+function renderGallery(){
+  const pend = items.filter(i => !i.saved).length;
+  $('gTitle').textContent = 'Galeria (' + items.length + ')';
+  $('saveAll').textContent = pend ? `Salvar ${pend} pendente${pend > 1 ? 's' : ''} no Fotos` : 'Nada pendente';
+  $('grid').innerHTML = items.length ? items.slice(0, 90).map(it => {
+    const u = urlOf(it);
+    const inner = it.kind === 'foto' ? '' : `<video src="${u}#t=0.1" muted playsinline preload="metadata"></video><span class="tag">vídeo</span>`;
+    return `<button class="cell" data-id="${it.id}" style="${it.kind === 'foto' ? `background-image:url(${u})` : ''}">${inner}${it.saved ? '<span class="ok">✓</span>' : ''}</button>`;
+  }).join('') : '<div class="empty">Nenhuma captura ainda.</div>';
+}
+
+async function shareItems(list){
+  if (!list.length) return false;
+  const files = list.map(fileOf);
+  try {
+    if (navigator.canShare && navigator.canShare({files})) {
+      await navigator.share({files});
+      for (const it of list) { it.saved = true; await DB.put(it).catch(() => {}); }
+      refreshThumb(); if (!$('gallery').hidden) renderGallery();
+      return true;
+    }
+    toast('Este iPhone não abriu o menu de salvar');
+  } catch(e) {
+    if (e.name !== 'AbortError') { note('share: ' + e.name + ' ' + e.message); toast('Toque de novo em Salvar'); }
+  }
+  return false;
+}
+
+$('thumb').addEventListener('click', () => { renderGallery(); $('gallery').hidden = false; });
+$('gClose').addEventListener('click', () => $('gallery').hidden = true);
+$('askSave').checked = store.get('askSave') === '1';
+$('askSave').addEventListener('change', e => store.set('askSave', e.target.checked ? '1' : '0'));
+$('saveAll').addEventListener('click', () => {
+  const pend = items.filter(i => !i.saved);
+  if (!pend.length) return;
+  shareItems(pend.slice(0, 20)).then(ok => { if (ok && pend.length > 20) toast('Toque de novo para o próximo lote'); });
+});
+$('clearSaved').addEventListener('click', async () => {
+  const done = items.filter(i => i.saved);
+  for (const it of done) { await DB.del(it.id).catch(() => {}); dropUrl(it.id); }
+  items = items.filter(i => !i.saved);
+  refreshThumb(); renderGallery();
+  toast(done.length + ' apagada' + (done.length === 1 ? '' : 's') + ' do app');
+});
+$('grid').addEventListener('click', e => {
+  const c = e.target.closest('.cell'); if (!c) return;
+  const it = items.find(i => i.id === +c.dataset.id); if (it) openViewer(it);
+});
+
+function openViewer(it){
+  viewing = it;
+  const foto = it.kind === 'foto';
+  $('big').hidden = !foto; $('bigv').hidden = foto;
+  if (foto) $('big').src = urlOf(it); else $('bigv').src = urlOf(it);
+  $('vSave').textContent = it.saved ? 'Salvar de novo' : 'Salvar no Fotos';
+  $('viewer').hidden = false;
+}
+$('vClose').addEventListener('click', () => { $('bigv').pause(); $('viewer').hidden = true; if (!$('gallery').hidden) renderGallery(); });
+$('vSave').addEventListener('click', () => viewing && shareItems([viewing]).then(ok => { if (ok) $('vSave').textContent = 'Salvar de novo'; }));
+$('vDel').addEventListener('click', async () => {
+  if (!viewing) return;
+  if ($('vDel').dataset.confirm !== '1') { $('vDel').dataset.confirm = '1'; $('vDel').textContent = 'Toque de novo para apagar'; setTimeout(() => { $('vDel').dataset.confirm = ''; $('vDel').textContent = 'Apagar'; }, 3000); return; }
+  $('vDel').dataset.confirm = ''; $('vDel').textContent = 'Apagar';
+  await DB.del(viewing.id).catch(() => {}); dropUrl(viewing.id);
+  items = items.filter(i => i !== viewing); viewing = null;
+  $('bigv').pause(); $('viewer').hidden = true; refreshThumb(); renderGallery();
+});
+
+/* ---------- câmera ---------- */
 function nice(label){
   const l = (label||'').toLowerCase();
   if (/front|frontal/.test(l)) return ['Selfie','frontal'];
@@ -186,6 +336,7 @@ function stop(){
 }
 
 async function open(deviceId){
+  if (opening) return; opening = true;
   if (rec) stopRec();
   stop(); wantRunning = true;
   status('Abrindo…','wait'); $('shot').disabled = true;
@@ -194,15 +345,22 @@ async function open(deviceId){
   try {
     stream = await navigator.mediaDevices.getUserMedia({video, audio:false});
   } catch (e) {
+    opening = false;
     note('Falha ao abrir: ' + e.name + ' ' + e.message);
-    if (e.name === 'NotAllowedError') { showMsg('Sem permissão', 'Vá em Ajustes > Safari > Câmera e escolha Permitir. Depois feche e abra o app.'); status('Sem permissão','bad'); return; }
+    if (e.name === 'NotAllowedError') { showMsg('Toque para liberar a câmera', 'O iPhone pede autorização a cada vez que o app é aberto. Para não perguntar mais, veja a dica no Diagnóstico.', 'Abrir câmera'); status('Aguardando permissão','wait'); return; }
+    if (e.name === 'OverconstrainedError' && deviceId) { store.set('lente', ''); opening = false; return open(null); }
     status('Lente não abriu','bad'); scheduleRetry(); return;
   }
+  opening = false;
   const tr = stream.getVideoTracks()[0];
   cur = tr.getSettings().deviceId || deviceId;
   if (cur) store.set('lente', cur);
   note('Aberta: ' + tr.label + ' ' + JSON.stringify(tr.getSettings()));
-  tr.addEventListener('ended', () => { note('iOS encerrou a câmera (ended)'); if (rec) stopRec(); status('Cortada pelo iOS','bad'); scheduleRetry(); });
+  tr.addEventListener('ended', () => {
+    note('iOS encerrou a câmera (ended)'); if (rec) stopRec();
+    if (document.hidden) return;
+    status('Cortada pelo iOS','bad'); scheduleRetry();
+  });
   tr.addEventListener('mute', () => { note('Imagem pausada (mute)'); status('Imagem pausada','wait'); });
   tr.addEventListener('unmute', () => { note('Imagem voltou (unmute)'); status('Ao vivo','ok'); });
   v.srcObject = stream;
@@ -248,7 +406,7 @@ function scheduleRetry(){
 }
 
 setInterval(() => {
-  if (!stream || v.readyState < 2) { $('res').hidden = true; return; }
+  if (!stream || v.readyState < 2 || document.hidden) { $('res').hidden = true; return; }
   $('res').hidden = false;
   $('res').textContent = v.videoWidth + '×' + v.videoHeight;
   pctx.drawImage(v, 0, 0, 32, 24);
@@ -268,13 +426,14 @@ chips.addEventListener('click', e => {
   retry = 0; open(devices[+b.dataset.i].deviceId);
 });
 $('q').addEventListener('change', () => { store.set('qual', $('q').value); if (stream && !rec) { retry = 0; open(cur); } });
-$('startBtn').addEventListener('click', async () => {
+
+async function start(){
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     showMsg('Navegador sem câmera', 'Abra este link no Safari, por um endereço https.'); return;
   }
-  retry = 0; await open(store.get('lente'));
-  if (!stream) await open(null);
-});
+  retry = 0; await open(store.get('lente') || null);
+}
+$('startBtn').addEventListener('click', start);
 
 function setMode(m){
   if (rec) return;
@@ -302,8 +461,7 @@ function takePhoto(){
   $('flash').style.opacity = .8; setTimeout(() => $('flash').style.opacity = 0, 90);
   c.toBlob(b => {
     note('Foto ' + c.width + '×' + c.height + ', ' + Math.round(b.size/1024) + ' KB');
-    setLast(b, 'foto');
-    openSheet();
+    keep(b, 'foto');
   }, 'image/jpeg', 0.95);
 }
 
@@ -353,52 +511,18 @@ function finishRec(){
   const r = rec; rec = null;
   clearInterval(recTick);
   $('shot').classList.remove('recording'); $('timer').hidden = true;
-  if (mic) { mic.getTracks().forEach(a => a.stop()); mic = null; }
   if (!recChunks.length) { note('Gravação vazia'); return; }
   const type = (r && r.mimeType) || recChunks[0].type || 'video/mp4';
   const blob = new Blob(recChunks, {type});
   recChunks = [];
   note('Vídeo ' + Math.round((Date.now() - recStart)/1000) + 's, ' + Math.round(blob.size/1024/1024*10)/10 + ' MB');
-  setLast(blob, 'video');
-  openSheet();
+  keep(blob, 'video');
   if (stream && $('q').value === 'max') {
     const tr = stream.getVideoTracks()[0];
     tr && tr.applyConstraints(QUAL.max).catch(() => {});
   }
   if (stream) status('Ao vivo','ok');
 }
-
-function setLast(blob, kind){
-  if (last) URL.revokeObjectURL(last.url);
-  last = {blob, kind, url: URL.createObjectURL(blob)};
-  const th = $('thumb');
-  if (kind === 'foto') { th.innerHTML = ''; th.style.backgroundImage = `url(${last.url})`; }
-  else { th.style.backgroundImage = ''; th.innerHTML = `<video src="${last.url}#t=0.1" muted playsinline preload="metadata"></video>`; }
-}
-
-function openSheet(){
-  if (!last) return;
-  const foto = last.kind === 'foto';
-  $('big').hidden = !foto; $('bigv').hidden = foto;
-  if (foto) $('big').src = last.url; else $('bigv').src = last.url;
-  $('sheetTip').textContent = foto
-    ? 'Toque em Salvar e escolha "Salvar Imagem" para mandar pro app Fotos.'
-    : 'Toque em Salvar e escolha "Salvar Vídeo" para mandar pro app Fotos.';
-  $('sheet').hidden = false;
-}
-$('thumb').addEventListener('click', openSheet);
-$('closeBtn').addEventListener('click', () => { $('bigv').pause(); $('sheet').hidden = true; });
-$('saveBtn').addEventListener('click', async () => {
-  if (!last) return;
-  const foto = last.kind === 'foto';
-  const ext = foto ? 'jpg' : (/webm/.test(last.blob.type) ? 'webm' : 'mp4');
-  const name = (foto ? 'foto-' : 'video-') + new Date().toISOString().replace(/[:.]/g,'-') + '.' + ext;
-  const file = new File([last.blob], name, {type: last.blob.type || (foto ? 'image/jpeg' : 'video/mp4')});
-  try {
-    if (navigator.canShare && navigator.canShare({files:[file]})) { await navigator.share({files:[file]}); return; }
-  } catch(e) { if (e.name === 'AbortError') return; note('share: ' + e.message); }
-  const a = document.createElement('a'); a.href = last.url; a.download = name; a.click();
-});
 
 $('diagBtn').addEventListener('click', () => {
   const tr = stream && stream.getVideoTracks()[0];
@@ -410,7 +534,14 @@ $('diagBtn').addEventListener('click', () => {
     'Resolução: ' + (v.videoWidth ? v.videoWidth + '×' + v.videoHeight : '-'),
     'Gravação de vídeo: ' + (pickMime() === null ? 'não suportada' : (pickMime() || 'formato padrão')),
     'Offline: ' + (navigator.serviceWorker && navigator.serviceWorker.controller ? 'ativo' : 'ainda não (abra uma vez com internet)'),
-    '', 'Registro:', ...log.slice().reverse()
+    'Na galeria: ' + items.length + ' (' + items.filter(i => !i.saved).length + ' ainda não salvos no Fotos)',
+    '',
+    'Para o iPhone parar de pedir permissão:',
+    ' Ajustes > Apps > Safari > Câmera > Permitir',
+    ' Ajustes > Apps > Safari > Microfone > Permitir',
+    ' (em iOS mais antigo: Ajustes > Safari > Câmera)',
+    '',
+    'Registro:', ...log.slice().reverse()
   ];
   $('diag').textContent = lines.join('\n');
   $('diagSheet').hidden = false;
@@ -418,12 +549,23 @@ $('diagBtn').addEventListener('click', () => {
 $('closeDiag').addEventListener('click', () => $('diagSheet').hidden = true);
 $('copyDiag').addEventListener('click', () => navigator.clipboard.writeText($('diag').textContent).catch(() => {}));
 
+/* Ao minimizar NÃO desligamos a câmera: o iOS só pausa a imagem e devolve ao voltar,
+   sem pedir permissão de novo. Só reabrimos se o iOS de fato encerrou a câmera. */
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { if (rec) stopRec(); stop(); }
-  else if (wantRunning) { retry = 0; open(cur); }
+  if (document.hidden) {
+    if (rec) stopRec();
+    if (mic) { setTimeout(() => { if (document.hidden && mic) { mic.getTracks().forEach(a => a.stop()); mic = null; } }, 1500); }
+    return;
+  }
+  if (!wantRunning) return;
+  const tr = stream && stream.getVideoTracks()[0];
+  if (!tr || tr.readyState === 'ended') { retry = 0; open(cur); }
+  else { v.play().catch(() => {}); }
 });
+
 const q0 = store.get('qual'); if (q0 && QUAL[q0]) $('q').value = q0;
 if (store.get('modo') === 'video') setMode('video');
+start();
 }
 </script>
 </body>

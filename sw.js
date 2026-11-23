@@ -1,4 +1,4 @@
-const VERSAO = 'lentes-v4';
+const VERSAO = 'lentes-v5';
 const ARQUIVOS = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-512.png'];
 
 self.addEventListener('install', e => {
