@@ -8,46 +8,54 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Lentes">
 <meta name="theme-color" content="#0a0a0b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
 <title>Lentes</title>
 <style>
-:root{--bg:#0a0a0b;--ink:#f4f4f2;--dim:#9a9a96;--line:#26262a;--acc:#ffd23f;--bad:#ff5a4e;--ok:#3ddc84}
+:root{--bg:#0a0a0b;--ink:#f4f4f2;--dim:#9a9a96;--line:#26262a;--acc:#ffd23f;--bad:#ff5a4e;--ok:#3ddc84;--rec:#ff3b30}
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,system-ui,sans-serif;overflow:hidden}
 .app{position:fixed;inset:0;display:grid;grid-template-rows:auto 1fr auto;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
 header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;gap:10px}
-.st{font-size:13px;color:var(--dim);display:flex;align-items:center;gap:8px}
-.dot{width:9px;height:9px;border-radius:50%;background:var(--dim)}
+.st{font-size:13px;color:var(--dim);display:flex;align-items:center;gap:8px;min-width:0}
+.st span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{flex:none;width:9px;height:9px;border-radius:50%;background:var(--dim)}
 .dot.ok{background:var(--ok)}.dot.bad{background:var(--bad)}.dot.wait{background:var(--acc)}
 .view{position:relative;overflow:hidden;background:#000}
-video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+video#v{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;gap:14px;background:#000c}
-.msg[hidden]{display:none}
+.msg[hidden],[hidden]{display:none!important}
 .msg p{color:var(--dim);max-width:30ch;font-size:15px}
 .msg b{font-size:19px;font-weight:600}
 .flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
 .res{position:absolute;left:12px;bottom:10px;font-size:12px;color:#fff;background:#0008;padding:3px 8px;border-radius:6px}
+.timer{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:var(--rec);color:#fff;font:600 15px/1 ui-monospace,Menlo,monospace;padding:6px 12px;border-radius:8px}
 .zoomw{position:absolute;right:10px;top:50%;transform:translateY(-50%) rotate(-90deg);transform-origin:center;width:150px}
-.zoomw[hidden]{display:none}
-.bar{padding:10px 12px 14px;display:grid;gap:12px;background:var(--bg)}
+.bar{padding:10px 12px 14px;display:grid;gap:10px;background:var(--bg)}
 .chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
 .chips::-webkit-scrollbar{display:none}
-.chip{flex:none;border:1px solid var(--line);background:#16161a;color:var(--ink);border-radius:22px;padding:9px 14px;font:inherit;font-size:14px;min-height:44px;display:flex;flex-direction:column;align-items:flex-start;line-height:1.15}
+.chip{flex:none;border:1px solid var(--line);background:#16161a;color:var(--ink);border-radius:22px;padding:8px 14px;font:inherit;font-size:14px;min-height:44px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;line-height:1.15}
 .chip small{font-size:11px;color:var(--dim)}
 .chip.on{background:var(--acc);color:#111;border-color:var(--acc)}
 .chip.on small{color:#3a3000}
+.modes{display:flex;justify-content:center;gap:22px}
+.modes button{background:none;border:0;color:var(--dim);font:600 14px/1 -apple-system,system-ui,sans-serif;letter-spacing:.04em;padding:8px 4px;min-height:36px}
+.modes button.on{color:var(--acc)}
 .row{display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
 .shot{width:76px;height:76px;border-radius:50%;border:4px solid var(--ink);background:transparent;display:grid;place-items:center;padding:0}
-.shot span{width:60px;height:60px;border-radius:50%;background:var(--ink);transition:transform .1s}
+.shot span{width:60px;height:60px;border-radius:50%;background:var(--ink);transition:all .15s}
 .shot:active span{transform:scale(.88)}
 .shot:disabled{opacity:.35}
-.thumb{width:52px;height:52px;border-radius:10px;border:1px solid var(--line);background:#16161a center/cover;justify-self:start}
+.shot.video span{background:var(--rec)}
+.shot.recording span{width:30px;height:30px;border-radius:7px;background:var(--rec)}
+.thumb{width:52px;height:52px;border-radius:10px;border:1px solid var(--line);background:#16161a center/cover;justify-self:start;padding:0;overflow:hidden}
+.thumb video{width:100%;height:100%;object-fit:cover;pointer-events:none}
 .sel{justify-self:end;display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 select,.btn{font:inherit;font-size:14px;color:var(--ink);background:#16161a;border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:40px}
 .btn.big{background:var(--acc);color:#111;border:0;font-weight:600;padding:12px 22px;min-height:48px;font-size:16px}
 label.tg{font-size:13px;color:var(--dim);display:flex;align-items:center;gap:6px}
-.sheet{position:fixed;inset:0;background:#000d;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top) + 12px) 14px calc(env(safe-area-inset-bottom) + 12px);gap:12px;z-index:5}
-.sheet[hidden]{display:none}
-.sheet img{flex:1;min-height:0;width:100%;object-fit:contain;border-radius:8px}
+.sheet{position:fixed;inset:0;background:#000e;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top) + 12px) 14px calc(env(safe-area-inset-bottom) + 12px);gap:12px;z-index:5}
+.sheet img,.sheet video{flex:1;min-height:0;width:100%;object-fit:contain;border-radius:8px;background:#000}
 .sheet .acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 .sheet p{font-size:13px;color:var(--dim);text-align:center}
 .diag{font:12px/1.5 ui-monospace,Menlo,monospace;color:var(--dim);white-space:pre-wrap;overflow:auto;flex:1;background:#111;border-radius:8px;padding:10px}
@@ -63,11 +71,12 @@ label.tg{font-size:13px;color:var(--dim);display:flex;align-items:center;gap:6px
   <div class="view">
     <video id="v" playsinline muted autoplay></video>
     <div class="res" id="res" hidden></div>
+    <div class="timer" id="timer" hidden>00:00</div>
     <input type="range" class="zoomw" id="zoom" min="1" max="1" step="0.1" value="1" hidden aria-label="Zoom">
     <div class="flash" id="flash"></div>
     <div class="msg" id="msg">
       <b>Câmera por lente</b>
-      <p>Abre cada câmera traseira separadamente, religa sozinha quando o iPhone corta a imagem e tira foto em resolução máxima.</p>
+      <p>Abre cada câmera traseira separadamente, religa sozinha quando o iPhone corta a imagem, tira foto e grava vídeo.</p>
       <button class="btn big" id="startBtn">Abrir câmera</button>
     </div>
   </div>
@@ -75,8 +84,12 @@ label.tg{font-size:13px;color:var(--dim);display:flex;align-items:center;gap:6px
   <div class="bar">
     <div class="chips" id="chips"></div>
     <div class="chips" id="zp" hidden></div>
+    <div class="modes">
+      <button id="mFoto" class="on">FOTO</button>
+      <button id="mVideo">VÍDEO</button>
+    </div>
     <div class="row">
-      <button class="thumb" id="thumb" aria-label="Última foto"></button>
+      <button class="thumb" id="thumb" aria-label="Última captura"></button>
       <button class="shot" id="shot" disabled aria-label="Tirar foto"><span></span></button>
       <div class="sel">
         <select id="q" aria-label="Qualidade">
@@ -91,8 +104,9 @@ label.tg{font-size:13px;color:var(--dim);display:flex;align-items:center;gap:6px
 </div>
 
 <div class="sheet" id="sheet" hidden>
-  <img id="big" alt="Foto tirada">
-  <p>Toque em Salvar e escolha "Salvar Imagem" para mandar pro app Fotos. Se não aparecer, toque e segure na foto.</p>
+  <img id="big" alt="Foto tirada" hidden>
+  <video id="bigv" controls playsinline hidden></video>
+  <p id="sheetTip">Toque em Salvar e escolha "Salvar Imagem" para mandar pro app Fotos.</p>
   <div class="acts">
     <button class="btn big" id="saveBtn">Salvar</button>
     <button class="btn" id="closeBtn">Voltar</button>
@@ -116,7 +130,8 @@ const QUAL = {
   hd:  {width:{ideal:1920}, height:{ideal:1080}},
   low: {width:{ideal:1280}, height:{ideal:720}}
 };
-let stream = null, devices = [], cur = null, retry = 0, retryTimer = null, blackSince = 0, lastBlob = null, wantRunning = false;
+let stream = null, devices = [], cur = null, retry = 0, retryTimer = null, blackSince = 0, wantRunning = false;
+let mode = 'foto', rec = null, recChunks = [], recStart = 0, recTick = null, mic = null, last = null;
 const probe = document.createElement('canvas'); probe.width = 32; probe.height = 24;
 const pctx = probe.getContext('2d', {willReadFrequently:true});
 
@@ -134,6 +149,10 @@ function showMsg(title, body, btn){
   $('startBtn').textContent = btn || 'Tentar de novo';
 }
 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(() => note('Modo offline pronto')).catch(e => note('Offline indisponível: ' + e.message));
+}
+
 function nice(label){
   const l = (label||'').toLowerCase();
   if (/front|frontal/.test(l)) return ['Selfie','frontal'];
@@ -148,7 +167,7 @@ async function listCams(){
   const all = await navigator.mediaDevices.enumerateDevices();
   devices = all.filter(d => d.kind === 'videoinput');
   note('Câmeras que o iOS informou: ' + (devices.map(d => d.label || '(sem nome)').join(' | ') || 'nenhuma'));
-  const order = d => { const n = nice(d.label)[0]; return {'0,5x':0,'1x':1,'Tele':2,'Auto':3,'Selfie':4}[n] ?? 5; };
+  const order = d => ({'0,5x':0,'1x':1,'Tele':2,'Auto':3,'Selfie':4}[nice(d.label)[0]] ?? 5);
   devices.sort((a,b) => order(a) - order(b));
   chips.innerHTML = devices.map((d,i) => {
     const [a,b] = nice(d.label);
@@ -163,6 +182,7 @@ function stop(){
 }
 
 async function open(deviceId){
+  if (rec) stopRec();
   stop(); wantRunning = true;
   status('Abrindo…','wait'); $('shot').disabled = true;
   const q = QUAL[$('q').value];
@@ -171,14 +191,14 @@ async function open(deviceId){
     stream = await navigator.mediaDevices.getUserMedia({video, audio:false});
   } catch (e) {
     note('Falha ao abrir: ' + e.name + ' ' + e.message);
-    if (e.name === 'NotAllowedError') { showMsg('Sem permissão', 'Vá em Ajustes > Safari > Câmera e escolha Permitir. Depois recarregue a página.'); status('Sem permissão','bad'); return; }
+    if (e.name === 'NotAllowedError') { showMsg('Sem permissão', 'Vá em Ajustes > Safari > Câmera e escolha Permitir. Depois feche e abra o app.'); status('Sem permissão','bad'); return; }
     status('Lente não abriu','bad'); scheduleRetry(); return;
   }
   const tr = stream.getVideoTracks()[0];
   cur = tr.getSettings().deviceId || deviceId;
   if (cur) store.set('lente', cur);
   note('Aberta: ' + tr.label + ' ' + JSON.stringify(tr.getSettings()));
-  tr.addEventListener('ended', () => { note('iOS encerrou a câmera (ended)'); status('Cortada pelo iOS','bad'); scheduleRetry(); });
+  tr.addEventListener('ended', () => { note('iOS encerrou a câmera (ended)'); if (rec) stopRec(); status('Cortada pelo iOS','bad'); scheduleRetry(); });
   tr.addEventListener('mute', () => { note('Imagem pausada (mute)'); status('Imagem pausada','wait'); });
   tr.addEventListener('unmute', () => { note('Imagem voltou (unmute)'); status('Ao vivo','ok'); });
   v.srcObject = stream;
@@ -235,15 +255,15 @@ setInterval(() => {
     blackSince = blackSince || Date.now();
     const secs = (Date.now() - blackSince) / 1000;
     if (secs > 3) status('Imagem preta há ' + Math.round(secs) + 's (lente sem sinal ou tampada)', 'bad');
-    if (secs > 12 && $('auto').checked) { note('Preto por 12s, reabrindo'); blackSince = 0; scheduleRetry(); }
-  } else if (blackSince) { blackSince = 0; status('Ao vivo','ok'); }
+    if (secs > 12 && $('auto').checked && !rec) { note('Preto por 12s, reabrindo'); blackSince = 0; scheduleRetry(); }
+  } else if (blackSince) { blackSince = 0; status(rec ? 'Gravando' : 'Ao vivo','ok'); }
 }, 1000);
 
 chips.addEventListener('click', e => {
-  const b = e.target.closest('.chip'); if (!b) return;
+  const b = e.target.closest('.chip'); if (!b || rec) return;
   retry = 0; open(devices[+b.dataset.i].deviceId);
 });
-$('q').addEventListener('change', () => { store.set('qual', $('q').value); if (stream) { retry = 0; open(cur); } });
+$('q').addEventListener('change', () => { store.set('qual', $('q').value); if (stream && !rec) { retry = 0; open(cur); } });
 $('startBtn').addEventListener('click', async () => {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     showMsg('Navegador sem câmera', 'Abra este link no Safari, por um endereço https.'); return;
@@ -252,32 +272,128 @@ $('startBtn').addEventListener('click', async () => {
   if (!stream) await open(null);
 });
 
+function setMode(m){
+  if (rec) return;
+  mode = m;
+  $('mFoto').classList.toggle('on', m === 'foto');
+  $('mVideo').classList.toggle('on', m === 'video');
+  $('shot').classList.toggle('video', m === 'video');
+  $('shot').setAttribute('aria-label', m === 'foto' ? 'Tirar foto' : 'Gravar vídeo');
+  store.set('modo', m);
+}
+$('mFoto').addEventListener('click', () => setMode('foto'));
+$('mVideo').addEventListener('click', () => setMode('video'));
+
 $('shot').addEventListener('click', () => {
+  if (mode === 'foto') takePhoto();
+  else if (rec) stopRec();
+  else startRec();
+});
+
+function takePhoto(){
   if (!v.videoWidth) return;
   const c = document.createElement('canvas');
   c.width = v.videoWidth; c.height = v.videoHeight;
   c.getContext('2d').drawImage(v, 0, 0);
   $('flash').style.opacity = .8; setTimeout(() => $('flash').style.opacity = 0, 90);
   c.toBlob(b => {
-    lastBlob = b;
-    const url = URL.createObjectURL(b);
-    $('thumb').style.backgroundImage = `url(${url})`;
-    $('big').src = url;
     note('Foto ' + c.width + '×' + c.height + ', ' + Math.round(b.size/1024) + ' KB');
+    setLast(b, 'foto');
     openSheet();
   }, 'image/jpeg', 0.95);
-});
-function openSheet(){ if (lastBlob) $('sheet').hidden = false; }
+}
+
+function pickMime(){
+  const opts = ['video/mp4;codecs=avc1.640028,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm'];
+  if (!window.MediaRecorder) return null;
+  for (const o of opts) if (MediaRecorder.isTypeSupported(o)) return o;
+  return '';
+}
+
+async function startRec(){
+  if (!stream) return;
+  const mime = pickMime();
+  if (mime === null) { status('Este iOS não grava vídeo pelo navegador','bad'); return; }
+  const tr = stream.getVideoTracks()[0];
+  if ($('q').value === 'max') {
+    await tr.applyConstraints({width:{ideal:1920}, height:{ideal:1440}}).catch(e => note('resolução p/ vídeo: ' + e.message));
+  }
+  if (!mic || mic.getAudioTracks().every(a => a.readyState === 'ended')) {
+    try { mic = await navigator.mediaDevices.getUserMedia({audio:true}); }
+    catch(e) { mic = null; note('Sem microfone: ' + e.name + ' (vídeo sem som)'); }
+  }
+  const mix = new MediaStream([tr, ...(mic ? mic.getAudioTracks() : [])]);
+  try {
+    rec = new MediaRecorder(mix, mime ? {mimeType: mime, videoBitsPerSecond: 8000000} : {});
+  } catch(e) { note('MediaRecorder: ' + e.message); status('Não consegui gravar','bad'); rec = null; return; }
+  recChunks = [];
+  rec.ondataavailable = e => { if (e.data && e.data.size) recChunks.push(e.data); };
+  rec.onstop = finishRec;
+  rec.start(1000);
+  recStart = Date.now();
+  $('shot').classList.add('recording'); $('timer').hidden = false; $('timer').textContent = '00:00';
+  recTick = setInterval(() => {
+    const s = Math.floor((Date.now() - recStart) / 1000);
+    $('timer').textContent = String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+  }, 500);
+  status('Gravando','ok');
+  note('Gravação iniciada: ' + (rec.mimeType || mime || 'padrão') + ' ' + v.videoWidth + '×' + v.videoHeight);
+}
+
+function stopRec(){
+  if (!rec) return;
+  try { if (rec.state !== 'inactive') rec.stop(); else finishRec(); } catch(e) { finishRec(); }
+}
+
+function finishRec(){
+  const r = rec; rec = null;
+  clearInterval(recTick);
+  $('shot').classList.remove('recording'); $('timer').hidden = true;
+  if (mic) { mic.getTracks().forEach(a => a.stop()); mic = null; }
+  if (!recChunks.length) { note('Gravação vazia'); return; }
+  const type = (r && r.mimeType) || recChunks[0].type || 'video/mp4';
+  const blob = new Blob(recChunks, {type});
+  recChunks = [];
+  note('Vídeo ' + Math.round((Date.now() - recStart)/1000) + 's, ' + Math.round(blob.size/1024/1024*10)/10 + ' MB');
+  setLast(blob, 'video');
+  openSheet();
+  if (stream && $('q').value === 'max') {
+    const tr = stream.getVideoTracks()[0];
+    tr && tr.applyConstraints(QUAL.max).catch(() => {});
+  }
+  if (stream) status('Ao vivo','ok');
+}
+
+function setLast(blob, kind){
+  if (last) URL.revokeObjectURL(last.url);
+  last = {blob, kind, url: URL.createObjectURL(blob)};
+  const th = $('thumb');
+  if (kind === 'foto') { th.innerHTML = ''; th.style.backgroundImage = `url(${last.url})`; }
+  else { th.style.backgroundImage = ''; th.innerHTML = `<video src="${last.url}#t=0.1" muted playsinline preload="metadata"></video>`; }
+}
+
+function openSheet(){
+  if (!last) return;
+  const foto = last.kind === 'foto';
+  $('big').hidden = !foto; $('bigv').hidden = foto;
+  if (foto) $('big').src = last.url; else $('bigv').src = last.url;
+  $('sheetTip').textContent = foto
+    ? 'Toque em Salvar e escolha "Salvar Imagem" para mandar pro app Fotos.'
+    : 'Toque em Salvar e escolha "Salvar Vídeo" para mandar pro app Fotos.';
+  $('sheet').hidden = false;
+}
 $('thumb').addEventListener('click', openSheet);
-$('closeBtn').addEventListener('click', () => $('sheet').hidden = true);
+$('closeBtn').addEventListener('click', () => { $('bigv').pause(); $('sheet').hidden = true; });
 $('saveBtn').addEventListener('click', async () => {
-  if (!lastBlob) return;
-  const name = 'foto-' + new Date().toISOString().replace(/[:.]/g,'-') + '.jpg';
-  const file = new File([lastBlob], name, {type:'image/jpeg'});
+  if (!last) return;
+  const foto = last.kind === 'foto';
+  const ext = foto ? 'jpg' : (/webm/.test(last.blob.type) ? 'webm' : 'mp4');
+  const name = (foto ? 'foto-' : 'video-') + new Date().toISOString().replace(/[:.]/g,'-') + '.' + ext;
+  const file = new File([last.blob], name, {type: last.blob.type || (foto ? 'image/jpeg' : 'video/mp4')});
   try {
     if (navigator.canShare && navigator.canShare({files:[file]})) { await navigator.share({files:[file]}); return; }
   } catch(e) { if (e.name === 'AbortError') return; note('share: ' + e.message); }
-  const a = document.createElement('a'); a.href = URL.createObjectURL(lastBlob); a.download = name; a.click();
+  const a = document.createElement('a'); a.href = last.url; a.download = name; a.click();
 });
 
 $('diagBtn').addEventListener('click', () => {
@@ -288,6 +404,8 @@ $('diagBtn').addEventListener('click', () => {
     '',
     'Em uso: ' + (tr ? tr.label + ' | estado ' + tr.readyState + (tr.muted ? ' | pausada' : '') : 'nenhuma'),
     'Resolução: ' + (v.videoWidth ? v.videoWidth + '×' + v.videoHeight : '-'),
+    'Gravação de vídeo: ' + (pickMime() === null ? 'não suportada' : (pickMime() || 'formato padrão')),
+    'Offline: ' + (navigator.serviceWorker && navigator.serviceWorker.controller ? 'ativo' : 'ainda não (abra uma vez com internet)'),
     '', 'Registro:', ...log.slice().reverse()
   ];
   $('diag').textContent = lines.join('\n');
@@ -297,10 +415,11 @@ $('closeDiag').addEventListener('click', () => $('diagSheet').hidden = true);
 $('copyDiag').addEventListener('click', () => navigator.clipboard.writeText($('diag').textContent).catch(() => {}));
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden) { stop(); }
+  if (document.hidden) { if (rec) stopRec(); stop(); }
   else if (wantRunning) { retry = 0; open(cur); }
 });
 const q0 = store.get('qual'); if (q0 && QUAL[q0]) $('q').value = q0;
+if (store.get('modo') === 'video') setMode('video');
 }
 </script>
 </body>
